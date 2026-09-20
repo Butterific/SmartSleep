@@ -12,7 +12,7 @@
 		"sources": "https://github.com/Butterific/SmartSleep",
 		"youtube": "https://www.youtube.com/@butter_labs"
 	},
-	"license": "CC0-1.0",
+	"license": "Apache-2.0",
 	"icon": "assets/smart-sleep/icon.png",
 	"environment": "*",
 	"entrypoints": {
