@@ -5,8 +5,12 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -21,12 +25,17 @@ import net.minecraft.world.scores.TeamColor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public class SmartSleep implements ModInitializer {
 	public static final String modId = "smart-sleep";
 	public static final Logger logger = LoggerFactory.getLogger(modId);
+
+	private final Map<UUID, Long> cooldowns = new HashMap<>();
 
 	@Override
 	public void onInitialize() {
@@ -34,10 +43,18 @@ public class SmartSleep implements ModInitializer {
 
 		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
 			if (!world.isClientSide()) {
+				long currentTime = System.currentTimeMillis();
+				UUID playerUuid = player.getUUID();
+				if (cooldowns.containsKey(playerUuid) && (currentTime - cooldowns.get(playerUuid)) < 3000) {
+					return InteractionResult.PASS;
+				}
+
 				BlockPos pos = hitResult.getBlockPos();
 				BlockState state = world.getBlockState(pos);
 
 				if (state.getBlock() instanceof BedBlock) {
+					cooldowns.put(playerUuid, currentTime);
+
 					AABB searchArea = new AABB(pos).inflate(16.0);
 					List<Monster> monsters = world.getEntitiesOfClass(
 							Monster.class,
@@ -54,8 +71,15 @@ public class SmartSleep implements ModInitializer {
 					}
 
 					int counters = 0;
+					double closestDistance = Double.MAX_VALUE;
+
 					for (Monster monster : monsters) {
 						counters += 1;
+						double dist = monster.distanceToSqr(pos.getX(), pos.getY(), pos.getZ());
+						if (dist < closestDistance) {
+							closestDistance = dist;
+						}
+
 						scoreboard.addPlayerToTeam(monster.getScoreboardName(), redTeam);
 						monster.addEffect(new MobEffectInstance(
 								MobEffects.GLOWING,
@@ -65,9 +89,35 @@ public class SmartSleep implements ModInitializer {
 					}
 
 					if (counters > 0) {
-						player.sendSystemMessage(Component.literal("There are " + counters + " mobs outside!"));
+						world.playSound(
+								null,
+								pos,
+								SoundEvents.ANVIL_LAND,
+								SoundSource.BLOCKS,
+								0.5F,
+								1.5F
+						);
+
+						if (world instanceof ServerLevel serverWorld) {
+							serverWorld.sendParticles(
+									ParticleTypes.ANGRY_VILLAGER,
+									pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5,
+									5,
+									0.2, 0.2, 0.2,
+									0.05
+							);
+						}
+
+						if (closestDistance <= 25.0) {
+							player.sendSystemMessage(Component.literal("Mobs are right next to you! (" + counters + " total)")
+									.withStyle(ChatFormatting.DARK_RED));
+						} else {
+							player.sendSystemMessage(Component.literal("There are " + counters + " mobs nearby!")
+									.withStyle(ChatFormatting.YELLOW));
+						}
 					} else {
-						player.sendSystemMessage(Component.literal("No mobs nearby!"));
+						player.sendSystemMessage(Component.literal("No mobs nearby, area is safe!")
+								.withStyle(ChatFormatting.GREEN));
 					}
 				}
 			}
