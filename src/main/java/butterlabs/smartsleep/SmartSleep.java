@@ -50,7 +50,7 @@ public class SmartSleep implements ModInitializer {
 
 					if (redTeam == null) {
 						redTeam = scoreboard.addPlayerTeam("red_glow");
-						redTeam.setColor(Optional.of((TeamColor) ChatFormatting.RED));
+						redTeam.setColor(Optional.ofNullable(TeamColor.byName("red")));
 					}
 
 					int counters = 0;
