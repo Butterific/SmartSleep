@@ -3,7 +3,9 @@ package butterlabs.smartsleep;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -14,21 +16,21 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Scoreboard;
-import net.minecraft.ChatFormatting;
-
+import net.minecraft.world.scores.TeamColor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Optional;
 
 public class SmartSleep implements ModInitializer {
-	public static final String MOD_ID = "smart-sleep";
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+	public static final String modId = "smart-sleep";
+	public static final Logger logger = LoggerFactory.getLogger(modId);
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("Hello Fabric world!");
+		logger.info("Hello Fabric world!");
 
 		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
 			if (!world.isClientSide()) {
@@ -43,12 +45,29 @@ public class SmartSleep implements ModInitializer {
 							mob -> mob.isAlive()
 					);
 
+					Scoreboard scoreboard = world.getScoreboard();
+					PlayerTeam redTeam = scoreboard.getPlayerTeam("red_glow");
+
+					if (redTeam == null) {
+						redTeam = scoreboard.addPlayerTeam("red_glow");
+						redTeam.setColor(Optional.of((TeamColor) ChatFormatting.RED));
+					}
+
+					int counters = 0;
 					for (Monster monster : monsters) {
+						counters += 1;
+						scoreboard.addPlayerToTeam(monster.getScoreboardName(), redTeam);
 						monster.addEffect(new MobEffectInstance(
 								MobEffects.GLOWING,
-								10000,
+								100,
 								0
 						));
+					}
+
+					if (counters > 0) {
+						player.sendSystemMessage(Component.literal("There are " + counters + " mobs outside!"));
+					} else {
+						player.sendSystemMessage(Component.literal("No mobs nearby!"));
 					}
 				}
 			}
@@ -57,6 +76,6 @@ public class SmartSleep implements ModInitializer {
 	}
 
 	public static Identifier id(String path) {
-		return Identifier.fromNamespaceAndPath(MOD_ID, path);
+		return Identifier.fromNamespaceAndPath(modId, path);
 	}
 }
