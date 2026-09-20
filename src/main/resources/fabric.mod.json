@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "smart-sleep",
+	"version": "${version}",
+	"name": "Smart Sleep",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/smart-sleep/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"butterlabs.smartsleep.SmartSleep"
+		],
+		"client": [
+			"butterlabs.smartsleep.client.SmartSleepClient"
+		]
+	},
+	"mixins": [
+		"smart-sleep.mixins.json",
+		{
+			"config": "smart-sleep.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
