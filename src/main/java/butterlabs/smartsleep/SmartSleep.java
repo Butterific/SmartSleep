@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
@@ -16,6 +17,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.scores.PlayerTeam;
@@ -37,6 +39,14 @@ public class SmartSleep implements ModInitializer {
 
 	private final Map<UUID, Long> cooldowns = new HashMap<>();
 
+	private boolean isBedBlock(Block block) {
+		if (block instanceof BedBlock) {
+			return true;
+		}
+		Identifier id = BuiltInRegistries.BLOCK.getKey(block);
+		return id != null && id.getPath().contains("straw_bed");
+	}
+
 	@Override
 	public void onInitialize() {
 		logger.info("Hello Fabric world!");
@@ -52,7 +62,7 @@ public class SmartSleep implements ModInitializer {
 				BlockPos pos = hitResult.getBlockPos();
 				BlockState state = world.getBlockState(pos);
 
-				if (state.getBlock() instanceof BedBlock) {
+				if (isBedBlock(state.getBlock())) {
 					cooldowns.put(playerUuid, currentTime);
 
 					AABB searchArea = new AABB(pos).inflate(16.0);
