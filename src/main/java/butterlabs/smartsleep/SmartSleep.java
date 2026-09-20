@@ -2,6 +2,7 @@ package butterlabs.smartsleep;
 
 import net.fabricmc.api.ModInitializer;
 
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.resources.Identifier;
 
 import org.slf4j.Logger;
@@ -17,11 +18,12 @@ public class SmartSleep implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		// This code runs as soon as Minecraft is in a mod-load-ready state.
-		// However, some things (like resources) may still be uninitialized.
-		// Proceed with mild caution.
 
 		LOGGER.info("Hello Fabric world!");
+		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+			
+			return ActionResult.PASS;
+		});
 	}
 
 	public static Identifier id(String path) {
