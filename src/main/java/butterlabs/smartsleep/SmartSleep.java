@@ -12,6 +12,9 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Scoreboard;
+import net.minecraft.ChatFormatting;
 
 
 import org.slf4j.Logger;
